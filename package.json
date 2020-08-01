@@ -10,5 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "serverless-pseudo-parameters": "^2.5.0"
+  },
+  "devDependencies": {
+    "serverless-bundle": "^2.0.0"
   }
 }
