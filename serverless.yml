@@ -29,6 +29,13 @@ provider:
   runtime: nodejs12.x
   stage: ${opt:stage, 'dev'}
   region: ca-central-1
+  #iamRoleStatements:
+  #  - ${file(iam/PhotoBucketIAM):PhotoBucketIAM}
+
+resources:
+  Resources:
+    PhotoBucket: ${file(resources/PhotoBucket.yml):PhotoBucket}
+    PhotoBucketPolicy: ${file(resources/PhotoBucket.yml):PhotoBucketPolicy}
 
 
 functions:
@@ -39,7 +46,14 @@ functions:
           method: GET
           path: /hello
 
+ # processPhoto:
+ #   handler: src/processPhoto.handler
+ #   events: ##this function has to be triggered when a picture is uploaded to the bucket/old
+
 
 custom:
   bundle:
     linting: false
+  PhotoBucket:
+    name: photos-bucket-#{AWS::AccountId}-${self:provider.stage}
+
