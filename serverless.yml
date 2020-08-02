@@ -36,6 +36,7 @@ resources:
   Resources:
     PhotoBucket: ${file(resources/PhotoBucket.yml):PhotoBucket}
     PhotoBucketPolicy: ${file(resources/PhotoBucket.yml):PhotoBucketPolicy}
+    PhotoTable: ${file(resources/PhotoTable.yml):PhotoTable}
 
 
 functions:
@@ -46,9 +47,13 @@ functions:
           method: GET
           path: /hello
 
- # processPhoto:
- #   handler: src/processPhoto.handler
- #   events: ##this function has to be triggered when a picture is uploaded to the bucket/old
+  processPhoto:
+    handler: src/processPhoto.handler
+    events:
+      - s3:
+          bucket: !Ref PhotoBucket
+          event: s3:ObjectCreated:*
+          existing: true
 
 
 custom:
