@@ -29,8 +29,9 @@ provider:
   runtime: nodejs12.x
   stage: ${opt:stage, 'dev'}
   region: ca-central-1
-  #iamRoleStatements:
-  #  - ${file(iam/PhotoBucketIAM):PhotoBucketIAM}
+  iamRoleStatements:
+    - ${file(iam/PhotoBucketIAM.yml):PhotoBucketIAM}
+    - ${file(iam/PhotoTableIAM.yml):PhotoTableIAM}
 
 resources:
   Resources:
@@ -55,7 +56,7 @@ functions:
           event: s3:ObjectCreated:*
           existing: true
           rules:
-            - prefix: source/
+            - prefix: uploads/
 
 
 custom:
