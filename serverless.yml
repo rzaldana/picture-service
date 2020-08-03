@@ -54,6 +54,8 @@ functions:
           bucket: !Ref PhotoBucket
           event: s3:ObjectCreated:*
           existing: true
+          rules:
+            - prefix: source/
 
 
 custom:
