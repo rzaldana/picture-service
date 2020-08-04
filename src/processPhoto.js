@@ -17,8 +17,10 @@ async function processPhoto(event, context) {
     // Lambda URI encodes object keys so we need to decode them
     const srcKey = decodeURIComponent(event.Records[0].s3.object.key);
 
-    // remove "uploads/" path from srcKey and add "thumbnails/" path to make dstKey
-    const dstKey = srcKey.replace('uploads/', 'thumbnails/');
+    // create unique id for the photo which will server as destination key and hash key
+    const uid = uuid();
+    const dstKeyFullSize = "fullsize/" + uid;
+    const dstKeyThumbnails = "thumbnails/" + uid;
 
     // get name of bucket
     const bucket = event.Records[0].s3.bucket.name;
@@ -66,16 +68,52 @@ async function processPhoto(event, context) {
         return;
     }
 
+    // Upload original image to bucket with new name
+    // It is not possible to ammend object names in S3
+    // so we have to re-upload the image to change its name
+    try {
+        const destparams = {
+            Bucket: bucket,
+            CopySource: bucket + '/' + srcKey,
+            Key: dstKeyFullSize,
+        }
+
+
+        await s3.copyObject(destparams).promise();
+
+        const deleteparams = {
+            Bucket: bucket,
+            Key: srcKey
+        }
+
+        await s3.deleteObject(deleteparams).promise();
+
+
+    } catch (error) {
+        console.log(error);
+        return;
+    }
+
+    console.log('Successfully renamed ' + bucket + '/' + srcKey +
+        ' and uploaded to ' + bucket + '/' + dstKeyFullSize);
+
+
+
     // Upload the thumbnail image to the bucket
     try {
         const destparams = {
             Bucket: bucket,
-            Key: dstKey,
+            Key: dstKeyThumbnails,
             Body: buffer,
             ContentType: "image"
         };
 
-        var result = await s3.upload(destparams).promise();
+        // get the URL for the thumbnail
+        var { Location: thumbnailUrl } = await s3.upload(destparams).promise();
+
+        // get the URL for the fullsize image by modifying the thumbnail URL
+        // because copyObject does not return the copied object's URL
+        var fullSizeUrl = thumbnailUrl.replace('thumbnails/', 'fullsize/')
 
     } catch (error) {
         console.log(error);
@@ -83,16 +121,15 @@ async function processPhoto(event, context) {
     }
 
     console.log('Successfully resized ' + bucket + '/' + srcKey +
-        ' and uploaded to ' + bucket + '/' + dstKey);
+        ' and uploaded to ' + bucket + '/' + dstKeyThumbnails);
 
     // Create entry for photo in Dynamodb
 
-    console.log(result);
 
     const entry = {
-        id: uuid(),
-        originalUrl: result.Location.replace('/thumbnails', '/uploads'),
-        thumbnailUrl: result.Location,
+        id: uid,
+        fullSizeUrl: fullSizeUrl,
+        thumbnailUrl: thumbnailUrl,
     }
 
     var params = {
