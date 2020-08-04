@@ -16,6 +16,9 @@ async function getPhotos(event, context) {
 
     return ({
         statusCode: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*'
+        },
         body: JSON.stringify(photos),
     });
 }

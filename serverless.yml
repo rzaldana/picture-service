@@ -47,6 +47,7 @@ functions:
       - http:
           method: GET
           path: /hello
+          cors: true
 
   processPhoto:
     handler: src/processPhoto.handler
