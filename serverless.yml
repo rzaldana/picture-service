@@ -58,6 +58,13 @@ functions:
           rules:
             - prefix: uploads/
 
+  getPhotos:
+    handler: src/getPhotos.handler
+    events:
+      - http:
+          method: GET
+          path: /photos
+
 
 custom:
   bundle:
